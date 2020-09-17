@@ -84,7 +84,9 @@ class Response:
         self.status = status
         self.body = body
 
-    def to_string(self, type: str, with_body: bool) -> str:
+    def to_string(self, request: Request) -> str:
+        type = get_content_type(request.path)
+        with_body = request.body is not None and request.method == C.METHOD_GET
         tmp = \
             f'HTTP/1.1 {self.status}\n' \
             f'Date: {get_date()}\n' \
