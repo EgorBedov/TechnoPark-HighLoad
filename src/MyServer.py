@@ -3,7 +3,6 @@ import asyncio
 import constants as C
 from Parser import Parser, Request, Response
 from Files import Files
-from utils import *
 
 
 class MyServer:
