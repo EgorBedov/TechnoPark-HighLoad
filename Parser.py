@@ -10,21 +10,32 @@ class Parser:
     @staticmethod
     async def parse_HTTP_request(reader: asyncio.StreamReader):
         method, path, ver = await Parser.parse_request_line(reader)
+        if method is None or method == '':
+            print('No method')
+            return None
+        print('Parsed request line: ', method, path, ver)
+
         headers = await Parser.parse_headers(reader)
-        body = await Parser.parse_body(reader)
-        return Request(method, path, ver, headers, body)
+        print('Parsed headers: ', headers)
+
+        # body = await Parser.parse_body(reader)
+        # print('Parsed body: ', body)
+
+        return Request(method, path, ver, headers)
 
     @staticmethod
     async def parse_request_line(reader: asyncio.StreamReader):
         raw = await reader.readline()
 
-        req_line = raw.decode('iso-8859-1')
+        print('Raw: ', raw)
+
+        req_line = raw.decode(C.ENCODING)
         req_line = req_line.rstrip('\r\n')
         words = req_line.split()
         # if len(words) != 3:
         #     raise Exception('Malformed request line')
 
-        print(words)
+        print('Words: ', words)
 
         return words    #['GET', 'path', 'http/1.1']
 
@@ -33,11 +44,10 @@ class Parser:
         headers = []
         while True:
             raw = await reader.readline()
-            line = raw.decode('utf-8')
+            line = raw.decode(C.ENCODING)
             # if len(line) > C.MAX_LINE:
             #     raise Exception('Header line is too long')
 
-            print(line)
 
             if raw in (b'\r\n', b'\n', b''):
                 # завершаем чтение заголовков
@@ -56,51 +66,55 @@ class Parser:
 
         return hdict
 
-    @staticmethod
-    async def parse_body(reader: asyncio.StreamReader):
-        body = ''
-
-        while True:
-            chunk = await reader.read(8)
-            if chunk == b'\r\n':
-                break
-            body += chunk.decode('utf-8')
-
-        print(body)
-        return body
+    # @staticmethod
+    # async def parse_body(reader: asyncio.StreamReader):
+    #     body = ''
+    #
+    #     print('Start parsing body')
+    #     while not reader.at_eof():
+    #         chunk = await reader.read(8)
+    #         print(chunk)
+    #         if chunk == b'\r\n' or chunk == b'\n' or chunk == b'':
+    #             break
+    #         print('New chunk: ', chunk.decode(C.ENCODING))
+    #         body += chunk.decode(C.ENCODING)
+    #
+    #     return body
 
 
 class Request:
-    def __init__(self, method, path, version, headers, body):
+    def __init__(self, method, path, version, headers):
         self.method = method
         self.path = path
         self.version = version
         self.headers = headers
-        self.body = body
 
 
 class Response:
-    def __init__(self, status, body=''):
+    def __init__(self, status: C.HTTP_CODE, body=''):
         self.status = status
         self.body = body
 
     def to_string(self, request: Request) -> str:
         type = get_content_type(request.path)
-        with_body = request.body is not None and request.method == C.METHOD_GET
-        tmp = \
-            f'HTTP/1.1 {self.status}\n' \
-            f'Date: {get_date()}\n' \
-            f'Server: {SERVER_NAME}\n' \
-            'Connection: Close\n'
+        with_body = self.body is not None and request.method == C.METHOD_GET
 
-        if self.body is not None and len(self.body):
+        tmp = request.version+' '+str(self.status.code)+' '+self.status.status+C.HTTP_EOF + \
+            'Date: '+get_date()+C.HTTP_EOF + \
+            'Server: '+SERVER_NAME+C.HTTP_EOF + \
+            'Connection: Close'+C.HTTP_EOF
+
+        if request.method == C.METHOD_HEAD or self.body is not None and len(self.body):
             tmp = tmp + \
-                f'Content-Length: {len(self.body)}\n' \
-                f'Content-Type: {type}\n' + C.HTTP_EOF
+                'Content-Length: ' + str(len(self.body)) + C.HTTP_EOF + \
+                'Content-Type: ' + type + C.HTTP_EOF
+
+        tmp = tmp + C.HTTP_EOF
+
+        print(f'String body (with_body:{with_body})\n{tmp}')
 
         if with_body:
             tmp = tmp + self.body
 
-        tmp = tmp + C.HTTP_EOF
 
         return tmp

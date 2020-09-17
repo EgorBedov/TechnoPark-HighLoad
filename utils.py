@@ -6,21 +6,24 @@ from time import mktime
 def get_content_type(full_path: str):
     res = "application/unknown"
     pos = full_path.rfind('.')
+    end = full_path.find('?', pos)
+    if end == -1:
+         end = len(full_path)
 
     if pos == -1 or pos == len(full_path) - 1:
         return res
 
-    fileType = full_path[pos + 1:]
+    file_type = full_path[pos + 1:end]
 
-    if fileType == "html" or fileType == "css":
-        res = "text/" + fileType
-    elif fileType == "gif" or fileType == "jpeg" or fileType == "png":
-        res = "image/" + fileType
-    elif fileType == "jpg":
+    if file_type == "html" or file_type == "css":
+        res = "text/" + file_type
+    elif file_type == "gif" or file_type == "jpeg" or file_type == "png":
+        res = "image/" + file_type
+    elif file_type == "jpg":
         res = "image/jpeg"
-    elif fileType == "js":
+    elif file_type == "js":
         res = "application/javascript"
-    elif fileType == "swf":
+    elif file_type == "swf":
         res = "application/x-shockwave-flash"
 
     return res
