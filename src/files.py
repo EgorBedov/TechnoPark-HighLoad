@@ -4,7 +4,7 @@ from aiofile import AIOFile
 import urllib.parse
 
 import constants as C
-from MyConfig import GLOBAL_PATH
+from config import GLOBAL_PATH
 
 class Files:
     # key - filename
@@ -41,7 +41,7 @@ class Files:
 
         full_path = GLOBAL_PATH + filename[:end]
 
-        print('filename:', filename)
+        # print('filename:', filename)
 
         if filename.find('/../') != -1:
             # print('invalid path')
@@ -81,15 +81,6 @@ class Files:
             status = C.HTTP_STATUS_CODE_OK
             async with AIOFile(full_path, encoding=C.ENCODING) as afp:
                 body = await afp.read()
-        # elif value == 'd':
-        #     new_name = filename+'index.html'
-        #     new_value = Files.store[new_name]
-        #     if new_value == 'f':
-        #         status, body = await Files.from_store(full_path, new_name)
-        #     elif new_value == 'no':
-        #         status = C.HTTP_STATUS_CODE_FORBIDDEN
-        #     else:
-        #         status = C.HTTP_STATUS_INTERNAL_SERVER_ERROR
         elif value == 'no':
             status = C.HTTP_STATUS_CODE_NOT_FOUND
 

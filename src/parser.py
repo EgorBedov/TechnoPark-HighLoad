@@ -1,7 +1,7 @@
 from email.parser import BytesParser
 
 import constants as C
-from MyConfig import SERVER_NAME
+from config import SERVER_NAME
 from utils import *
 
 
