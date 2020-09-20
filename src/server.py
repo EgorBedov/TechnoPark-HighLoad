@@ -2,6 +2,7 @@ import socket
 import multiprocessing as mp
 import select
 import atexit
+import asyncio
 
 import constants as C
 from logger import Logger as log
