@@ -17,6 +17,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 2.7
+    - name: Configure apt
+      run: |
+        sudo killall apt apt-get
+        sudo dpkg --configure -a
+        sudo apt-get update
     - name: Install dependencies
       run: |
         apt-get install libssl-dev
