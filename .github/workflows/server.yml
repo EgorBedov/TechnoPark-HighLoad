@@ -19,8 +19,6 @@ jobs:
         python-version: 2.7
     - name: Configure apt
       run: |
-        sudo killall apt apt-get
-        sudo dpkg --configure -a
         sudo apt-get update
     - name: Install dependencies
       run: |
