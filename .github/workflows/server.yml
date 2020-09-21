@@ -13,21 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 2.7
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 2.7
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest aiofile
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        pip install httplib unittest
     - name: Start docker
       run: |
         ls -la
@@ -37,8 +30,5 @@ jobs:
       run: |
         git clone https://github.com/init/http-test-suite.git
         cd http-test-suite
-
-        docker build -t bykov-httpd https://github.com/init/http-test-suite.git
-        docker run -p 80:80 -v /etc/httpd.conf:/etc/httpd.conf:ro -v /var/www/html:/var/www/html:ro --name bykov-httpd -t bykov-httpd
 
         ./httptest.py || exit 1
