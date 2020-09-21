@@ -31,7 +31,7 @@ jobs:
     - name: Start docker
       run: |
         ls -la
-        docker build -t e.bedov https://github.com/EgorBedov/TechnoPark-HighLoad.git
+        docker build -t e.bedov https://github.com/EgorBedov/TechnoPark-HighLoad.git#pull/4/head
         docker run --detach -p 80:80 --name e.bedov -t e.bedov
     - name: Run tests
       run: |
