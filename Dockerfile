@@ -15,4 +15,4 @@ EXPOSE 80
 
 USER root
 
-CMD ./dist/main
+CMD ./dist/main deploy
