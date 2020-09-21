@@ -4,9 +4,10 @@ from aiofile import AIOFile
 import urllib.parse
 
 import constants as C
-from MyConfig import GLOBAL_PATH
+import config as config
 
 class Files:
+    GLOBAL_PATH = config.GLOBAL_PATH
     # key - filename
     # value - 'f' || 'd' || 'no'
     store = dict([
@@ -39,7 +40,7 @@ class Files:
         if end == -1:
             end = len(filename)
 
-        full_path = GLOBAL_PATH + filename[:end]
+        full_path = Files.GLOBAL_PATH + filename[:end]
 
         print('filename:', filename)
 
@@ -94,3 +95,8 @@ class Files:
             status = C.HTTP_STATUS_CODE_NOT_FOUND
 
         return status, body
+
+    @staticmethod
+    def read_config(mode: str):
+        if mode == 'deploy':
+            Files.GLOBAL_PATH = '/http-test-suite'

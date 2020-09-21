@@ -4,12 +4,10 @@ import select
 import atexit
 import asyncio
 
-import constants as C
 from logger import Logger as log
-import MyConfig as config
-from Parser import *
-from Files import Files
-import time
+from config import *
+from parser import *
+from files import Files
 
 
 class MainServer:
@@ -23,7 +21,7 @@ class MainServer:
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((config.HOST, config.PORT))
+        sock.bind((HOST, PORT))
         sock.listen(10)
 
         for i in range(mp.cpu_count()):
