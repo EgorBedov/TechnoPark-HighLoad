@@ -23,10 +23,11 @@ jobs:
         sudo rm /var/cache/apt/archives/lock
         sudo rm /var/lib/dpkg/lock*
         sudo dpkg --configure -a
-        sudo apt-get update
+        sudo apt install -f
+        sudo apt update
     - name: Install dependencies
       run: |
-        apt-get install libssl-dev
+        apt install libssl-dev
         python -m pip install --upgrade pip
         pip install http.client
     - name: Start docker
