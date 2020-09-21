@@ -19,6 +19,10 @@ jobs:
         python-version: 2.7
     - name: Configure apt
       run: |
+        sudo rm /var/lib/apt/lists/lock
+        sudo rm /var/cache/apt/archives/lock
+        sudo rm /var/lib/dpkg/lock*
+        sudo dpkg --configure -a
         sudo apt-get update
     - name: Install dependencies
       run: |
