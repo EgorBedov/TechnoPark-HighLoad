@@ -5,14 +5,12 @@ RUN apt-get install -y --no-install-recommends apt-utils
 
 RUN apt-get -y install python3-pip
 
-RUN pip3 install pyinstaller
+RUN pip3 install pyinstaller uvloop
 
 COPY . .
 
 RUN rm -rf build && rm -rf dist && pyinstaller -F src/main.py
 
-EXPOSE 80
-
-USER root
+EXPOSE 8080
 
 CMD ./dist/main deploy
