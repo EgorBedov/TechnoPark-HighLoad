@@ -67,10 +67,10 @@ class Response:
         # send body
         if self.status == C.HTTP_STATUS_CODE_OK and self.path and self.method == C.METHOD_GET:
             with open(self.path, 'rb') as file:
-                await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    os.sendfile,
-                    sock.fileno(),
-                    file.fileno(),
-                    0,
-                    os.path.getsize(self.path))
+                part = file.read(C.MAX_LINE)
+                while len(part) > 0:
+                    try:
+                        await asyncio.get_event_loop().sock_sendall(sock, part)
+                    except (BrokenPipeError, ConnectionResetError) as e:
+                        return
+                    part = file.read(C.MAX_LINE)
