@@ -17,7 +17,9 @@ class MainServer:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((HOST, PORT))
-        sock.listen(10)
+        log.l.info(f'Server is running on {HOST}:{PORT}')
+        sock.listen(MAX_CONNECTIONS)
+        sock.setblocking(False)
 
         uvloop.install()
 

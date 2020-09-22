@@ -7,6 +7,7 @@ import constants as C
 from config import SERVER_NAME
 from utils import *
 from files import Files
+from logger import Logger as log
 
 
 def parse(raw: bytes):
@@ -65,10 +66,19 @@ class Response:
         # send body
         if self.status == C.HTTP_STATUS_CODE_OK and self.path and self.method == C.METHOD_GET:
             with open(self.path, 'rb') as file:
-                part = file.read(C.MAX_LINE)
-                while len(part) > 0:
-                    try:
-                        await asyncio.get_event_loop().sock_sendall(sock, part)
-                    except (BrokenPipeError, ConnectionResetError) as e:
-                        return
-                    part = file.read(C.MAX_LINE)
+                try:
+                    await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        os.sendfile,
+                        sock.fileno(), file.fileno(),
+                        0, os.path.getsize(self.path) )
+                except (BrokenPipeError, ConnectionResetError) as e:
+                    log.l.warning(e)
+                    return
+                # part = file.read(C.MAX_LINE)
+                # while len(part) > 0:
+                #     try:
+                #         await asyncio.get_event_loop().sock_sendall(sock, part)
+                #     except (BrokenPipeError, ConnectionResetError, OSError) as e:
+                #         return
+                #     part = file.read(C.MAX_LINE)

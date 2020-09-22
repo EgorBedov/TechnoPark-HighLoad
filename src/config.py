@@ -3,5 +3,5 @@ SERVER_NAME = 'Egogoger Static Web Server'
 HOST = '0.0.0.0'
 PORT = 8080
 
-CORES = 1
-
+CORES = 4
+MAX_CONNECTIONS = 100
