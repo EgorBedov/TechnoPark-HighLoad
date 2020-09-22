@@ -29,9 +29,8 @@ class Files:
     # calling os.isfile is a heavy operation
     # consider checking once and then storing the result
     @staticmethod
-    async def getByPath(filename: str) -> Tuple[C.HTTP_CODE, str]:
+    def getByPath(filename: str) -> Tuple[C.HTTP_CODE, str]:
         status = C.HTTP_STATUS_CODE_NOT_FOUND
-        body = ''
 
         if filename.find('%') != -1:
             filename = urllib.parse.unquote(filename)   # encoding %
@@ -42,59 +41,37 @@ class Files:
 
         full_path = Files.GLOBAL_PATH + filename[:end]
 
-        print('filename:', filename)
-
-        if filename.find('/../') != -1:
-            # print('invalid path')
+        if filename.find('/..') != -1:
             status = C.HTTP_STATUS_CODE_FORBIDDEN
         elif filename.find('/dir12/') != -1:
             status = C.HTTP_STATUS_CODE_OK
-            body = 'bingo, you found it\n'
         elif filename in Files.store:
-            status, body = await Files.from_store(full_path, filename)
+            status = Files.from_store(filename)
         elif os.path.isfile(full_path):
-            # print('Send file')
             Files.store[filename] = 'f'
             status = C.HTTP_STATUS_CODE_OK
-            async with AIOFile(full_path, encoding=C.ENCODING) as afp:
-                body = await afp.read()
         elif os.path.isdir(full_path):
-            # print('Send directory')
-            # Files.store[filename] = 'd'
             full_path = full_path+'index.html'
             if os.path.exists(full_path):
                 status = C.HTTP_STATUS_CODE_OK
-                async with AIOFile(full_path, encoding=C.ENCODING) as afp:
-                    body = await afp.read()
             else:
                 status = C.HTTP_STATUS_CODE_FORBIDDEN
         else:
             Files.store[filename] = 'no'
 
-        return status, body
+        return status, full_path
 
     @staticmethod
-    async def from_store(full_path: str, filename: str) -> Tuple[C.HTTP_CODE, str]:
-        status, body = [C.HTTP_STATUS_CODE_NOT_FOUND, '']
+    def from_store(filename: str) -> C.HTTP_CODE:
+        status = C.HTTP_STATUS_CODE_NOT_FOUND
 
         value = Files.store[filename]
         if value == 'f':
             status = C.HTTP_STATUS_CODE_OK
-            async with AIOFile(full_path, encoding=C.ENCODING) as afp:
-                body = await afp.read()
-        # elif value == 'd':
-        #     new_name = filename+'index.html'
-        #     new_value = Files.store[new_name]
-        #     if new_value == 'f':
-        #         status, body = await Files.from_store(full_path, new_name)
-        #     elif new_value == 'no':
-        #         status = C.HTTP_STATUS_CODE_FORBIDDEN
-        #     else:
-        #         status = C.HTTP_STATUS_INTERNAL_SERVER_ERROR
         elif value == 'no':
             status = C.HTTP_STATUS_CODE_NOT_FOUND
 
-        return status, body
+        return status
 
     @staticmethod
     def read_config(mode: str):

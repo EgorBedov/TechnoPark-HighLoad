@@ -3,16 +3,14 @@ import multiprocessing as mp
 import select
 import atexit
 import asyncio
+import uvloop
 
 from logger import Logger as log
 from config import *
 from parser import *
-from files import Files
 
 
 class MainServer:
-    q = mp.Queue()
-
     def __init__(self):
         self.childrens_pull = []
         self.sock = None
@@ -24,19 +22,22 @@ class MainServer:
         sock.bind((HOST, PORT))
         sock.listen(10)
 
+        uvloop.install()
+
         for i in range(mp.cpu_count()):
-            self.prefork(sock, MainServer.q)
+            self.prefork(sock)
 
-        to_read = [sock]
-        while True:
-            ready_to_read, _, _ = select.select(to_read, [], [])
-            if sock in ready_to_read:
-                self.q.put('GO')
-                # time.sleep(3)
-                log.l.info('Socket is ready to accept')
+        try:
+            for worker in self.childrens_pull:
+                worker.join()
+        except KeyboardInterrupt:
+            for worker in self.childrens_pull:
+                worker.terminate()
+            sock.close()
+            log.l.info('Server was manually stopped')
 
-    def prefork(self, parent_sock: socket.socket, queue: mp.Queue):
-        p = mp.Process(target=worker, args=(parent_sock, queue))
+    def prefork(self, parent_sock: socket.socket):
+        p = mp.Process(target=worker, args=(parent_sock, ))
         p.start()
         self.childrens_pull.append(p)
 
@@ -46,34 +47,26 @@ class MainServer:
             c.join()
 
 
-def worker(parent_sock: socket.socket, q: mp.Queue):
-    asyncio.run(__worker(parent_sock, q))
+def worker(parent_sock: socket.socket):
+    asyncio.run(__worker(parent_sock))
 
 
-async def __worker(parent_sock: socket.socket, q: mp.Queue):
+async def __worker(parent_sock: socket.socket):
     while True:
-        msg = q.get()
-        log.l.info(msg)
-        if msg != 'GO':
-            return
-        connection, _ = parent_sock.accept()
-
-        await handle(connection)
-
-        connection.close()
+        child_sock, _ = await asyncio.get_event_loop().sock_accept(parent_sock)
+        await handle(child_sock)
+        child_sock.close()
 
 
-async def handle(conn: socket.socket):
-    raw = await asyncio.get_event_loop().sock_recv(conn, 1024)
+async def handle(sock: socket.socket):
+    raw = await asyncio.get_event_loop().sock_recv(sock, 1024)
     request = parse(raw)
     if request is None:
         log.l.info('Served empty request')
         return
-    print('Parsed request', request)
 
     response = Response(C.HTTP_STATUS_CODE_METHOD_NOT_ALLOWED)
     if request.method == C.METHOD_GET or request.method == C.METHOD_HEAD:
-        status, body = await Files.getByPath(request.path)
-        response = Response(status, body)
+        response.update(request)
 
-    conn.sendall(response.to_string(request).encode(C.ENCODING))
+    await response.send(sock)

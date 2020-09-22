@@ -1,8 +1,12 @@
 from email.parser import BytesParser
+import socket
+import asyncio
+import os
 
 import constants as C
 from config import SERVER_NAME
 from utils import *
+from files import Files
 
 
 def parse(raw: bytes):
@@ -29,29 +33,44 @@ class Request:
 
 
 class Response:
-    def __init__(self, status: C.HTTP_CODE, body=''):
+    def __init__(self, status: C.HTTP_CODE):
         self.status = status
-        self.body = body
+        self.path = None
 
-    def to_string(self, request: Request) -> str:
-        type = get_content_type(request.path)
-        with_body = self.body is not None and request.method == C.METHOD_GET
+    def update(self, req: Request):
+        self.method = req.method
+        self.status, self.path = Files.getByPath(req.path)
 
-        tmp = request.version+' '+str(self.status.code)+' '+self.status.status+C.HTTP_EOF + \
+    def head_to_string(self) -> str:
+        if self.path is not None:
+            type = get_content_type(self.path)
+
+        tmp = 'HTTP/1.1 '+str(self.status.code)+' '+self.status.status+C.HTTP_EOF + \
             'Date: '+get_date()+C.HTTP_EOF + \
             'Server: '+SERVER_NAME+C.HTTP_EOF + \
             'Connection: Close'+C.HTTP_EOF
 
-        if request.method == C.METHOD_HEAD or self.body is not None and len(self.body):
-            tmp = tmp + \
-                'Content-Length: ' + str(len(self.body)) + C.HTTP_EOF + \
+        if self.status == C.HTTP_STATUS_CODE_OK and self.path is not None:
+            tmp += \
+                'Content-Length: ' + str(os.path.getsize(self.path)) + C.HTTP_EOF + \
                 'Content-Type: ' + type + C.HTTP_EOF
 
-        tmp = tmp + C.HTTP_EOF
+        tmp += C.HTTP_EOF
 
-        print(f'String body (with_body:{with_body})\n{tmp}')
-
-        if with_body:
-            tmp = tmp + self.body
+        print(tmp)
 
         return tmp
+
+    async def send(self, sock: socket.socket):
+        await asyncio.get_event_loop().sock_sendall(sock, self.head_to_string().encode(C.ENCODING))
+
+        # send body
+        if self.status == C.HTTP_STATUS_CODE_OK and self.path and self.method == C.METHOD_GET:
+            with open(self.path, 'rb') as file:
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    os.sendfile,
+                    sock.fileno(),
+                    file.fileno(),
+                    0,
+                    os.path.getsize(self.path))
