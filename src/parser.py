@@ -57,8 +57,6 @@ class Response:
 
         tmp += C.HTTP_EOF
 
-        print(tmp)
-
         return tmp
 
     async def send(self, sock: socket.socket):

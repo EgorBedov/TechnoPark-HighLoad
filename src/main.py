@@ -1,4 +1,4 @@
-import sys, getopt
+import sys
 
 from server import MainServer
 from files import Files

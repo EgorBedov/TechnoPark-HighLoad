@@ -1,8 +1,5 @@
-import socket
 import multiprocessing as mp
-import select
 import atexit
-import asyncio
 import uvloop
 
 from logger import Logger as log
@@ -24,7 +21,7 @@ class MainServer:
 
         uvloop.install()
 
-        for i in range(mp.cpu_count()):
+        for i in range(CORES):
             self.prefork(sock)
 
         try:

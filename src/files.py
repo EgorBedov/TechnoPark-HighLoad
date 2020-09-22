@@ -1,6 +1,5 @@
 from typing import Tuple
 import os
-from aiofile import AIOFile
 import urllib.parse
 
 import constants as C
@@ -43,15 +42,13 @@ class Files:
 
         if filename.find('/..') != -1:
             status = C.HTTP_STATUS_CODE_FORBIDDEN
-        elif filename.find('/dir12/') != -1:
-            status = C.HTTP_STATUS_CODE_OK
         elif filename in Files.store:
             status = Files.from_store(filename)
         elif os.path.isfile(full_path):
             Files.store[filename] = 'f'
             status = C.HTTP_STATUS_CODE_OK
         elif os.path.isdir(full_path):
-            full_path = full_path+'index.html'
+            full_path = full_path+C.DIRECTORY_INDEX_FILENAME
             if os.path.exists(full_path):
                 status = C.HTTP_STATUS_CODE_OK
             else:

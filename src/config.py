@@ -2,3 +2,6 @@ GLOBAL_PATH = '/Users/egorbedov/Downloads/Prog/TechnoPark/Sem3/HighLoad/TechnoPa
 SERVER_NAME = 'Egogoger Static Web Server'
 HOST = '0.0.0.0'
 PORT = 80
+
+CORES = 4
+
