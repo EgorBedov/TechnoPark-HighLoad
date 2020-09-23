@@ -1,0 +1,43 @@
+name: Python application
+
+on:
+  push:
+    branches: [ HW1 ]
+  pull_request:
+    branches: [ HW1 ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 2.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 2.7
+    - name: Configure apt
+      run: |
+        killall apt
+        sudo rm /var/lib/apt/lists/lock
+        sudo rm /var/cache/apt/archives/lock
+        sudo rm /var/lib/dpkg/lock*
+        sudo dpkg --configure -a
+        sudo apt install -f
+        sudo apt update
+    - name: Install dependencies
+      run: |
+        apt install libssl-dev
+        python -m pip install --upgrade pip
+        pip install http.client
+    - name: Start docker
+      run: |
+        docker build -t e.bedov https://github.com/EgorBedov/TechnoPark-HighLoad.git#pull/4/head
+        docker run --detach -p 80:80 --name e.bedov -t e.bedov
+    - name: Run tests
+      run: |
+        git clone https://github.com/init/http-test-suite.git
+        cd http-test-suite
+
+        ./httptest.py || exit 1
