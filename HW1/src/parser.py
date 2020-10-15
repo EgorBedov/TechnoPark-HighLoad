@@ -67,6 +67,7 @@ class Response:
         # send body
         if self.status == C.HTTP_STATUS_CODE_OK and self.path and self.method == C.METHOD_GET:
             with open(self.path, 'rb') as file:
+                # Using lib sendfile
                 offset = 0
                 blocksize = os.path.getsize(self.path)
                 while True:
@@ -74,7 +75,8 @@ class Response:
                     offset += sent
                     if sent == 0:
                         break
-
+                
+                ## Using os.sendfile
                 # try:
                 #     await asyncio.get_event_loop().run_in_executor(
                 #         None,
@@ -85,6 +87,7 @@ class Response:
                 #     log.l.warning(e)
                 #     return
 
+                ## Using partial read
                 # part = file.read(C.MAX_LINE)
                 # while len(part) > 0:
                 #     try:
