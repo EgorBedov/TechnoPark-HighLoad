@@ -2,6 +2,7 @@ from email.parser import BytesParser
 import socket
 import asyncio
 import os
+import sendfile
 
 import constants as C
 from config import SERVER_NAME
@@ -66,15 +67,24 @@ class Response:
         # send body
         if self.status == C.HTTP_STATUS_CODE_OK and self.path and self.method == C.METHOD_GET:
             with open(self.path, 'rb') as file:
-                try:
-                    await asyncio.get_event_loop().run_in_executor(
-                        None,
-                        os.sendfile,
-                        sock.fileno(), file.fileno(),
-                        0, os.path.getsize(self.path) )
-                except (BrokenPipeError, ConnectionResetError) as e:
-                    log.l.warning(e)
-                    return
+                offset = 0
+                blocksize = os.path.getsize(self.path)
+                while True:
+                    sent = sendfile.sendfile(sock.fileno(), file.fileno(), offset, blocksize)
+                    offset += sent
+                    if sent == 0:
+                        break
+
+                # try:
+                #     await asyncio.get_event_loop().run_in_executor(
+                #         None,
+                #         os.sendfile,
+                #         sock.fileno(), file.fileno(),
+                #         0, os.path.getsize(self.path) )
+                # except (BrokenPipeError, ConnectionResetError) as e:
+                #     log.l.warning(e)
+                #     return
+
                 # part = file.read(C.MAX_LINE)
                 # while len(part) > 0:
                 #     try:
