@@ -90,3 +90,11 @@
 * [CPU](https://www.citilink.ru/catalog/computers_and_notebooks/servers_and_net_equipments/server_cpu/1125580/properties/): 8 ядер, 2,1-3ГГц 
 * [RAM](https://www.citilink.ru/catalog/computers_and_notebooks/servers_and_net_equipments/server_memories/994294/): 4GB, 2133MHz -> x4
 * [SSD](https://www.citilink.ru/catalog/computers_and_notebooks/hdd/ssd_in/1179581/): 3,8TB -> x4
+
+## 8. Выбор хостинга / облачного провайдера и расположения серверов
+Так же для увеличения скорости разработки и снижения стоимости микросервисы истории и чатов можно развернуть в облаке. Выберем Mail.Ru Cloud Services, потому что 
+1. Сервера расположены на территории России (максимально близко к конечному пользователю)
+2. Адекватные цены
+3. Нет языкового барьера при обращении в тех поддержку
+
+Сервера для жизненно важных серверов расположим в Москве, рядом с львиной частью целевой аудитории
